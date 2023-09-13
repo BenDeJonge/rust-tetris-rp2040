@@ -1,7 +1,13 @@
 use array2d::Array2D;
 use std::clone::Clone;
 
-/// Rotate a matrix 90 degrees clockwise by transposing and reversing each column.
+/// Transpose a matrix by turning rows into columns or vise versa.
+/// # Arguments
+/// - `matrix` - A reference to an Array2D of a generic which can be cloned
+fn transpose<T: Clone>(matrix: &Array2D<T>) -> Array2D<T> {
+    Array2D::from_columns(&matrix.as_rows()).unwrap()
+}
+/// Rotate a matrix 90 degrees clockwise by transposing and reversing the column order.
 /// # Arguments
 /// - `matrix` - A reference to an Array2D of a generic which can be cloned
 fn rotate_cw<T: Clone>(matrix: &Array2D<T>) -> Array2D<T> {
@@ -9,19 +15,12 @@ fn rotate_cw<T: Clone>(matrix: &Array2D<T>) -> Array2D<T> {
     Array2D::from_columns(&columns).unwrap()
 }
 
-/// Rotate a matrix 90 degrees counterclockwise by transposing and reversing each row.
+/// Rotate a matrix 90 degrees counterclockwise by transposing and reversing the row order.
 /// # Arguments
 /// - `matrix` - A reference to an Array2D of a generic which can be cloned
 fn rotate_ccw<T: Clone>(matrix: &Array2D<T>) -> Array2D<T> {
     let rows: Vec<Vec<T>> = transpose(matrix).as_rows().into_iter().rev().collect();
     Array2D::from_rows(&rows).unwrap()
-}
-
-/// Transpose a matrix by turning rows into columns or vise versa.
-/// # Arguments
-/// - `matrix` - A reference to an Array2D of a generic which can be cloned
-fn transpose<T: Clone>(matrix: &Array2D<T>) -> Array2D<T> {
-    Array2D::from_columns(&matrix.as_rows()).unwrap()
 }
 
 #[cfg(test)]
@@ -68,18 +67,18 @@ mod tests {
     #[test]
     fn test_rotate_ccw() {
         // Make matrix:
-        // [ 1, 2, 3 ]
-        // [ 4, 5, 6 ]
-        // Rotate to:
         // [ 4, 1 ]
         // [ 5, 2 ]
         // [ 6, 3 ]
-        let columns1 = vec![vec![1, 4], vec![2, 5], vec![3, 6]];
+        // Rotate to:
+        // [ 1, 2, 3 ]
+        // [ 4, 5, 6 ]
+        let columns1 = vec![vec![4, 5, 6], vec![1, 2, 3]];
         let m1 = Array2D::from_columns(&columns1).unwrap();
 
-        let columns2 = vec![vec![4, 5, 6], vec![1, 2, 3]];
+        let columns2 = vec![vec![1, 4], vec![2, 5], vec![3, 6]];
         let m2 = Array2D::from_columns(&columns2).unwrap();
 
-        assert_eq!(m1, rotate_ccw(&m2));
+        assert_eq!(rotate_ccw(&m1), m2);
     }
 }
