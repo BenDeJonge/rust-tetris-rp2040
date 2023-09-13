@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use array2d::Array2D;
 use std::clone::Clone;
 
