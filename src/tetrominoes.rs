@@ -41,12 +41,9 @@ impl Tetromino {
                 masks: generate_matrices(
                     Array2D::from_row_major(
                         &[
-                            false, false, false, false, // . . . .
-                            false, false, false, false, // . . . .
-                            true, true, true, true, //     o o o o
-                            false, false, false, false, // . . . .
+                            true, true, true, true, // o o o o
                         ],
-                        4,
+                        1,
                         4,
                     )
                     .unwrap(),
@@ -60,11 +57,10 @@ impl Tetromino {
                 masks: generate_matrices(
                     Array2D::from_row_major(
                         &[
-                            false, false, false, // . . .
                             true, false, false, //  o . .
                             true, true, true, //    o o o
                         ],
-                        3,
+                        2,
                         3,
                     )
                     .unwrap(),
@@ -78,11 +74,10 @@ impl Tetromino {
                 masks: generate_matrices(
                     Array2D::from_row_major(
                         &[
-                            false, false, false, // . . .
                             false, false, true, //  . . o
                             true, true, true, //    o o o
                         ],
-                        3,
+                        2,
                         3,
                     )
                     .unwrap(),
@@ -113,11 +108,10 @@ impl Tetromino {
                 masks: generate_matrices(
                     Array2D::from_row_major(
                         &[
-                            false, false, false, // . . .
-                            false, true, true, //   . x x
-                            true, true, false, //   x x .
+                            false, true, true, // . x x
+                            true, true, false, // x x .
                         ],
-                        3,
+                        2,
                         3,
                     )
                     .unwrap(),
@@ -131,11 +125,10 @@ impl Tetromino {
                 masks: generate_matrices(
                     Array2D::from_row_major(
                         &[
-                            false, false, false, // . . .
                             false, true, false, //  . x .
                             true, true, true, //    x x x
                         ],
-                        3,
+                        2,
                         3,
                     )
                     .unwrap(),
@@ -149,11 +142,10 @@ impl Tetromino {
                 masks: generate_matrices(
                     Array2D::from_row_major(
                         &[
-                            false, false, false, // . . .
                             true, true, false, //   x x .
                             false, true, true, //   . x x
                         ],
-                        3,
+                        2,
                         3,
                     )
                     .unwrap(),
@@ -194,11 +186,10 @@ mod tests {
         let t_s = Tetromino::new(TetrominoShape::S);
         let m_s = Array2D::from_row_major(
             &[
-                false, false, false, // . . .
-                false, true, true, //   . x x
-                true, true, false, //   x x .
+                false, true, true, // . x x
+                true, true, false, // x x .
             ],
-            3,
+            2,
             3,
         )
         .unwrap();
@@ -211,11 +202,10 @@ mod tests {
         let mut t_j = Tetromino::new(TetrominoShape::J);
         let mut m_j = Array2D::from_row_major(
             &[
-                false, false, false, // . . .
-                true, false, false, //  o . .
-                true, true, true, //    o o o
+                true, false, false, // o . .
+                true, true, true, //   o o o
             ],
-            3,
+            2,
             3,
         )
         .unwrap();
@@ -232,11 +222,10 @@ mod tests {
         let mut t_z = Tetromino::new(TetrominoShape::Z);
         let mut m_z = Array2D::from_row_major(
             &[
-                false, false, false, // . . .
-                true, true, false, //   x x .
-                false, true, true, //   . x x
+                true, true, false, // x x .
+                false, true, true, // . x x
             ],
-            3,
+            2,
             3,
         )
         .unwrap();
