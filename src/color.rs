@@ -23,7 +23,7 @@ impl ColorRgb {
 
     /// Convert an RGB color to an array of u8's.
     /// # Returns
-    /// - `[u8; 3]` - An array representation of the RGB colorspace.
+    /// - `[u8; 3]` - An array representation of the RGB colorspace
     pub fn to_array(&self) -> [u8; 3] {
         [self.r, self.g, self.b]
     }

@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 use std::ops;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Coordinate {
     /// A basic struct modelling a coordinate as row and a column
     pub row: usize,
@@ -10,6 +10,10 @@ pub struct Coordinate {
 
 impl Coordinate {
     /// Instantiate a `Coordinate` from an coordinate array of [row, col].
+    /// # Arguments
+    /// - `array` - The coordinate points as a `[usize; 2]` array of [row, col]
+    /// # Returns
+    /// - `Coordinate` - The `Coordinate` as a [row, col] index
     pub fn from_array(array: [usize; 2]) -> Self {
         Coordinate {
             row: array[0],
@@ -26,7 +30,7 @@ impl Coordinate {
     /// - `index` - The index as a `usize` in the row major order of elements
     /// - `dims` - The arrays dimensions as a `Coordinate`
     /// # Returns
-    /// - `Coordinate` - The `Coordinate` as a [row, col] index.
+    /// - `Coordinate` - The `Coordinate` as a [row, col] index
     pub fn from_row_major(index: usize, dims: Coordinate) -> Option<Self> {
         match index <= dims.inner_product() {
             true => Some(Coordinate {
@@ -42,7 +46,7 @@ impl Coordinate {
     /// - `index` - The index as a `usize` in the column major order of elements
     /// - `dims` - The arrays dimensions as a `Coordinate`
     /// # Returns
-    /// - `Coordinate` - The `Coordinate` as a [row, col] index.
+    /// - `Coordinate` - The `Coordinate` as a [row, col] index
     pub fn from_column_major(index: usize, dims: Coordinate) -> Option<Self> {
         match index <= dims.inner_product() {
             true => Some(Coordinate {
