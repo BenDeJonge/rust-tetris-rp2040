@@ -76,8 +76,9 @@ impl<T: Copy> Board<T> {
 /// - get all columns of the tetromino array
 /// - set all columns of the array in column major order (set_column_major), row major would loop over to next row
 /// - monitor the height of the tetromino array. Halt it when at its own height above the lowest row
-/// - monitor logical of tetromino and board array, if ever true: stop the tetromino
 /// - monitor the previous position of the tetromino and set it to false to avoid trues along the taken path
+/// - monitor logical and of tetromino and board array, if ever true: stop the tetromino
+/// - take logical XOR of previous and new board state. Only update TRUE pixels
 
 #[cfg(test)]
 mod tests {
