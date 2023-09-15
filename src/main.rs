@@ -1,6 +1,7 @@
 mod board;
 mod color;
 mod coordinate;
+mod gravity;
 mod rotation;
 mod tetrominoes;
 
