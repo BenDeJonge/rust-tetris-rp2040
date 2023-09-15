@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use crate::color::ColorRgb;
+use crate::coordinate::Coordinate;
 use crate::rotation::generate_matrices;
 use array2d::Array2D;
 
@@ -159,6 +160,13 @@ impl Tetromino {
     /// - `&Array2D<bool>` - A reference to currently valid binary mask
     pub fn get_mask(&self) -> &Array2D<bool> {
         &self.masks[self.index]
+    }
+
+    /// Get the shape of the current mask.
+    /// # Returns
+    /// - `[usize; 2]` - The shape of the current mask as number of rows and number of columns.
+    pub fn get_mask_shape(&self) -> Coordinate {
+        Coordinate::from_array([self.get_mask().num_rows(), self.get_mask().num_rows()])
     }
 
     /// Increment the index, representing a rotation of 90 degrees clockwise.
