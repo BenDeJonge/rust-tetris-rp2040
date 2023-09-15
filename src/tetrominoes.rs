@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use crate::color::ColorRgb;
+use crate::coordinate::Coordinate;
 use crate::rotation::generate_matrices;
 use array2d::Array2D;
 
@@ -41,12 +42,9 @@ impl Tetromino {
                 masks: generate_matrices(
                     Array2D::from_row_major(
                         &[
-                            false, false, false, false, // . . . .
-                            false, false, false, false, // . . . .
-                            true, true, true, true, //     o o o o
-                            false, false, false, false, // . . . .
+                            true, true, true, true, // o o o o
                         ],
-                        4,
+                        1,
                         4,
                     )
                     .unwrap(),
@@ -60,11 +58,10 @@ impl Tetromino {
                 masks: generate_matrices(
                     Array2D::from_row_major(
                         &[
-                            false, false, false, // . . .
                             true, false, false, //  o . .
                             true, true, true, //    o o o
                         ],
-                        3,
+                        2,
                         3,
                     )
                     .unwrap(),
@@ -78,11 +75,10 @@ impl Tetromino {
                 masks: generate_matrices(
                     Array2D::from_row_major(
                         &[
-                            false, false, false, // . . .
                             false, false, true, //  . . o
                             true, true, true, //    o o o
                         ],
-                        3,
+                        2,
                         3,
                     )
                     .unwrap(),
@@ -113,11 +109,10 @@ impl Tetromino {
                 masks: generate_matrices(
                     Array2D::from_row_major(
                         &[
-                            false, false, false, // . . .
-                            false, true, true, //   . x x
-                            true, true, false, //   x x .
+                            false, true, true, // . x x
+                            true, true, false, // x x .
                         ],
-                        3,
+                        2,
                         3,
                     )
                     .unwrap(),
@@ -131,11 +126,10 @@ impl Tetromino {
                 masks: generate_matrices(
                     Array2D::from_row_major(
                         &[
-                            false, false, false, // . . .
                             false, true, false, //  . x .
                             true, true, true, //    x x x
                         ],
-                        3,
+                        2,
                         3,
                     )
                     .unwrap(),
@@ -149,11 +143,10 @@ impl Tetromino {
                 masks: generate_matrices(
                     Array2D::from_row_major(
                         &[
-                            false, false, false, // . . .
                             true, true, false, //   x x .
                             false, true, true, //   . x x
                         ],
-                        3,
+                        2,
                         3,
                     )
                     .unwrap(),
@@ -167,6 +160,13 @@ impl Tetromino {
     /// - `&Array2D<bool>` - A reference to currently valid binary mask
     pub fn get_mask(&self) -> &Array2D<bool> {
         &self.masks[self.index]
+    }
+
+    /// Get the shape of the current mask.
+    /// # Returns
+    /// - `[usize; 2]` - The shape of the current mask as number of rows and number of columns.
+    pub fn get_mask_shape(&self) -> Coordinate {
+        Coordinate::from_array([self.get_mask().num_rows(), self.get_mask().num_rows()])
     }
 
     /// Increment the index, representing a rotation of 90 degrees clockwise.
@@ -194,11 +194,10 @@ mod tests {
         let t_s = Tetromino::new(TetrominoShape::S);
         let m_s = Array2D::from_row_major(
             &[
-                false, false, false, // . . .
-                false, true, true, //   . x x
-                true, true, false, //   x x .
+                false, true, true, // . x x
+                true, true, false, // x x .
             ],
-            3,
+            2,
             3,
         )
         .unwrap();
@@ -211,11 +210,10 @@ mod tests {
         let mut t_j = Tetromino::new(TetrominoShape::J);
         let mut m_j = Array2D::from_row_major(
             &[
-                false, false, false, // . . .
-                true, false, false, //  o . .
-                true, true, true, //    o o o
+                true, false, false, // o . .
+                true, true, true, //   o o o
             ],
-            3,
+            2,
             3,
         )
         .unwrap();
@@ -232,11 +230,10 @@ mod tests {
         let mut t_z = Tetromino::new(TetrominoShape::Z);
         let mut m_z = Array2D::from_row_major(
             &[
-                false, false, false, // . . .
-                true, true, false, //   x x .
-                false, true, true, //   . x x
+                true, true, false, // x x .
+                false, true, true, // . x x
             ],
-            3,
+            2,
             3,
         )
         .unwrap();
