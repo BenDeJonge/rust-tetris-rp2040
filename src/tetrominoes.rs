@@ -1,9 +1,11 @@
 #![allow(dead_code)]
 
-use crate::color::ColorRgb;
+use crate::color::{Color, ColorRgb};
 use crate::coordinate::Coordinate;
 use crate::rotation::generate_matrices;
 use array2d::Array2D;
+
+// TODO: how to save a list of TetrominoShapes, each with color and array. Generate e.g. Vec<Tetromino>
 
 pub enum TetrominoShape {
     I,
@@ -14,7 +16,8 @@ pub enum TetrominoShape {
     T,
     Z,
 }
-pub struct Tetromino {
+
+pub struct Tetromino<T> {
     /// A struct reflecting a Tetromino block.
     /// # Attributes
     /// - `shape` - A public `TetrominoShape` enum variant representing the shape
@@ -23,21 +26,69 @@ pub struct Tetromino {
     /// - `index` - The index of the currently used mask
     pub shape: TetrominoShape,
     pub color: ColorRgb,
-    masks: [Array2D<bool>; 4],
+    masks: [Array2D<T>; 4],
     index: usize,
 }
 
-impl Tetromino {
+impl<T> Tetromino<T>
+where
+    T: Clone,
+{
     /// Create a new `Tetromino` based on a shape.
     /// # Arguments
     /// - `shape` - A `Tetrominoshape` enum variant representing the shape
+    /// - `color` - A `ColorRgb` struct representing the red, green and blue component
+    /// - `mask` - An initial mask as an `Array2D<T>`, to be rotated three times
     /// # Returns
     /// - `Tetromino` - An instance of a Tetromino struct
-    pub fn new(shape: TetrominoShape) -> Self {
+    pub fn new(shape: TetrominoShape, color: ColorRgb, mask: Array2D<T>) -> Self {
+        Tetromino {
+            shape,
+            color,
+            masks: generate_matrices(mask),
+            index: 0,
+        }
+    }
+
+    /// Get the current mask.
+    /// # Returns
+    /// - `&Array2D<bool>` - A reference to currently valid binary mask
+    pub fn get_mask(&self) -> &Array2D<T> {
+        &self.masks[self.index]
+    }
+
+    /// Get the shape of the current mask.
+    /// # Returns
+    /// - `[usize; 2]` - The shape of the current mask as number of rows and number of columns.
+    pub fn get_shape(&self) -> Coordinate {
+        Coordinate::from_array([self.get_mask().num_rows(), self.get_mask().num_columns()])
+    }
+
+    /// Get the bottom right coordinate of the current board state.
+    /// # Returns
+    /// - `Coordinate` - The bottom right coordinate, equal to [row - 1, col - 1]
+    pub fn get_coords(&self) -> Coordinate {
+        self.get_shape() - [1, 1]
+    }
+
+    /// Increment the index, representing a rotation of 90 degrees clockwise.
+    pub fn rotate_cw(&mut self) {
+        self.index = (self.index + 1) % self.masks.len();
+    }
+
+    /// Decrement the index, representing a rotation of 90 degrees clockwise.
+    pub fn rotate_ccw(&mut self) {
+        self.index = (self.index + self.masks.len() - 1) % self.masks.len();
+    }
+}
+
+impl From<TetrominoShape> for Tetromino<bool> {
+    /// Convert from a `TetrominoShape` to a `Tetromino`.
+    fn from(shape: TetrominoShape) -> Self {
         match shape {
             TetrominoShape::I => Tetromino {
                 shape: TetrominoShape::I,
-                color: ColorRgb::from_array(&[0, 255, 255]), // cyan
+                color: ColorRgb::from(Color::Cyan),
                 index: 0,
                 masks: generate_matrices(
                     Array2D::from_row_major(
@@ -53,7 +104,7 @@ impl Tetromino {
 
             TetrominoShape::J => Tetromino {
                 shape: TetrominoShape::J,
-                color: ColorRgb::from_array(&[0, 0, 255]), // blue
+                color: ColorRgb::from(Color::Blue),
                 index: 0,
                 masks: generate_matrices(
                     Array2D::from_row_major(
@@ -70,7 +121,7 @@ impl Tetromino {
 
             TetrominoShape::L => Tetromino {
                 shape: TetrominoShape::L,
-                color: ColorRgb::from_array(&[255, 127, 0]), // orange
+                color: ColorRgb::from(Color::Orange),
                 index: 0,
                 masks: generate_matrices(
                     Array2D::from_row_major(
@@ -87,7 +138,7 @@ impl Tetromino {
 
             TetrominoShape::O => Tetromino {
                 shape: TetrominoShape::O,
-                color: ColorRgb::from_array(&[255, 255, 0]), // yellow
+                color: ColorRgb::from(Color::Yellow),
                 index: 0,
                 masks: generate_matrices(
                     Array2D::from_row_major(
@@ -104,7 +155,7 @@ impl Tetromino {
 
             TetrominoShape::S => Tetromino {
                 shape: TetrominoShape::S,
-                color: ColorRgb::from_array(&[0, 255, 0]), // green
+                color: ColorRgb::from(Color::Green),
                 index: 0,
                 masks: generate_matrices(
                     Array2D::from_row_major(
@@ -121,7 +172,7 @@ impl Tetromino {
 
             TetrominoShape::T => Tetromino {
                 shape: TetrominoShape::T,
-                color: ColorRgb::from_array(&[255, 0, 255]), // purple
+                color: ColorRgb::from(Color::Purple),
                 index: 0,
                 masks: generate_matrices(
                     Array2D::from_row_major(
@@ -138,7 +189,7 @@ impl Tetromino {
 
             TetrominoShape::Z => Tetromino {
                 shape: TetrominoShape::Z,
-                color: ColorRgb::from_array(&[255, 0, 0]), // red
+                color: ColorRgb::from(Color::Red),
                 index: 0,
                 masks: generate_matrices(
                     Array2D::from_row_major(
@@ -154,30 +205,6 @@ impl Tetromino {
             },
         }
     }
-
-    /// Get the current mask.
-    /// # Returns
-    /// - `&Array2D<bool>` - A reference to currently valid binary mask
-    pub fn get_mask(&self) -> &Array2D<bool> {
-        &self.masks[self.index]
-    }
-
-    /// Get the shape of the current mask.
-    /// # Returns
-    /// - `[usize; 2]` - The shape of the current mask as number of rows and number of columns.
-    pub fn get_mask_shape(&self) -> Coordinate {
-        Coordinate::from_array([self.get_mask().num_rows(), self.get_mask().num_rows()])
-    }
-
-    /// Increment the index, representing a rotation of 90 degrees clockwise.
-    pub fn rotate_cw(&mut self) {
-        self.index = (self.index + 1) % self.masks.len();
-    }
-
-    /// Decrement the index, representing a rotation of 90 degrees clockwise.
-    pub fn rotate_ccw(&mut self) {
-        self.index = (self.index + self.masks.len() - 1) % self.masks.len();
-    }
 }
 
 #[cfg(test)]
@@ -191,7 +218,7 @@ mod tests {
     #[test]
     fn test_tetromino_init() {
         // Create S Tetromino, check if array matches.
-        let t_s = Tetromino::new(TetrominoShape::S);
+        let t_s = Tetromino::from(TetrominoShape::S);
         let m_s = Array2D::from_row_major(
             &[
                 false, true, true, // . x x
@@ -207,7 +234,7 @@ mod tests {
     #[test]
     fn test_tetromino_rotate_cw() {
         // Create J Tetromino, rotate 10 times clockwise, check if all match.
-        let mut t_j = Tetromino::new(TetrominoShape::J);
+        let mut t_j = Tetromino::from(TetrominoShape::J);
         let mut m_j = Array2D::from_row_major(
             &[
                 true, false, false, // o . .
@@ -227,7 +254,7 @@ mod tests {
     #[test]
     fn test_tetromino_rotate_ccw() {
         // Create Z Tetromino, rotate 10 times counterclockwise, check if all match.
-        let mut t_z = Tetromino::new(TetrominoShape::Z);
+        let mut t_z = Tetromino::from(TetrominoShape::Z);
         let mut m_z = Array2D::from_row_major(
             &[
                 true, true, false, // x x .

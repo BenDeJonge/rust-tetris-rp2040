@@ -2,28 +2,119 @@
 
 use crate::coordinate::Coordinate;
 use array2d::{Array2D, Error};
+use std::cmp::{max, min};
 
 pub struct Board<T: Copy> {
     board: Array2D<T>,
+    negative: T,
 }
 
-impl<T: Copy> Board<T> {
+pub enum BitLogic {
+    And,
+    Or,
+    Xor,
+    None,
+}
+
+impl<T> Board<T>
+where
+    T: Copy
+        + Clone
+        + std::ops::BitAnd<T, Output = T>
+        + std::ops::BitOr<Output = T>
+        + std::ops::BitXor<T, Output = T>,
+{
     /// Create a board filled with false, indicating empty cells.
     /// # Arguments
-    /// - `dims` - The width and height of the board as an array of usize's.
+    /// - `dims` - The width and height of the board as an array of usize's
     /// # Returns
     /// `Array2D<bool>` - The array filled with false
     pub fn new(dims: Coordinate, element: T) -> Self {
         Board {
             board: Array2D::filled_with(element, dims.row, dims.col),
+            negative: element,
+        }
+    }
+
+    /// Create a board from a pre-existing array.
+    /// # Arguments
+    /// - `array` - The array, representing the internal board state
+    /// - `negative` - The value representing an empty cell
+    /// # Returns
+    /// - `Board<T>` - A board instance
+    pub fn from_array(array: &Array2D<T>, negative: T) -> Self {
+        Board {
+            board: array.to_owned(),
+            negative,
         }
     }
 
     /// Get a reference to the current board state.
     /// # Returns
     /// - `&Array2D<Bool>` - A reference to the current board state
-    pub fn get_array(&mut self) -> &Array2D<T> {
+    pub fn get_array(&self) -> &Array2D<T> {
         &self.board
+    }
+
+    /// Get the value of the negative element.
+    /// # Returns
+    /// - `T` - The negative element
+    pub fn get_negative(&self) -> T {
+        self.negative
+    }
+
+    /// Get the shape of the current board state.
+    /// # Returns
+    /// - `Coordinate` - The shape of the current board state as a `Coordinate` of [row, col]
+    pub fn get_shape(&self) -> Coordinate {
+        Coordinate {
+            row: self.board.num_rows(),
+            col: self.board.num_columns(),
+        }
+    }
+
+    /// Get the bottom right coordinate of the current board state.
+    /// # Returns
+    /// - `Coordinate` - The bottom right coordinate, equal to [row - 1, col - 1]
+    pub fn get_coords(&self) -> Coordinate {
+        self.get_shape() - [1, 1]
+    }
+
+    /// Get a slice from an array that is inclusive at the low and exclusive at the high end.
+    /// # Arguments
+    /// - `coord1` - The lower coordinate for slicing
+    /// - `coord2` - The higher coordinate for slicing
+    /// # Returns
+    /// - `Option<Board<T>>` - A slice of the board if both coordinates are in bounds and `None` otherwise
+    pub fn slice(&self, coord1: Coordinate, coord2: Coordinate) -> Option<Board<T>> {
+        let coord_low = Coordinate {
+            row: min(coord1.row, coord2.row),
+            col: min(coord1.col, coord2.col),
+        };
+        let coord_high = Coordinate {
+            row: max(coord1.row, coord2.row),
+            col: max(coord1.col, coord2.col),
+        };
+
+        let origin = Coordinate::from_array([0, 0]);
+        match coord_low.is_within_bounds(origin, self.get_shape())
+            && coord_high.is_within_bounds(origin, self.get_shape())
+        {
+            false => None,
+            true => {
+                let dest = coord_high - coord_low;
+                let mut row_major = Vec::with_capacity(dest.inner_product());
+                for r in coord_low.row..coord_high.row {
+                    for c in coord_low.col..coord_high.col {
+                        row_major.push(*self.get_array().get(r, c).unwrap())
+                    }
+                }
+                Some(Board::from_array(
+                    &Array2D::from_row_major(&row_major, dest.row, dest.col).unwrap(),
+                    self.get_negative(),
+                ))
+            }
+        }
     }
 
     /// Set a board to a specific value over some range.
@@ -32,53 +123,164 @@ impl<T: Copy> Board<T> {
     /// - `value` - A generic of the same type to overwrite the board's values with
     /// - `coord` - The starting coordinate [row, col] as a `Coordinate`
     /// - `dims` - The dimensions of the board range to be set [rows, cols] as a `Coordinate`
-    pub fn set_value(
-        &mut self,
-        value: T,
-        coord: Coordinate,
-        dims: Coordinate,
-    ) -> Result<(), Error> {
+    pub fn set_value(&mut self, value: T, coord: Coordinate, dims: Coordinate) {
         // Simple wrapper for set_mask.
         let mask = Array2D::filled_with(value, dims.row, dims.col);
         self.set_mask(&mask, coord)
     }
 
-    /// Set a board to a specific mask over some range.
+    /// Set a board to a specific mask over some range without logic.
     /// # Arguments
     /// - `board` - A muteable reference to an `Array2D` containing some generic
     /// - `mask` - A second `Array2D` containing a generic of the same type to overwrite the board's values with
     /// - `coord` - The starting coordinate [row, col] as a `Coordinate`
-    pub fn set_mask(
-        &mut self,
-        mask: &Array2D<T>, // [2, 2] -> [1, 1]
-        coord: Coordinate, // [1, 2] -> coord + mask = [2, 3]
-    ) -> Result<(), Error> {
+    pub fn set_mask(&mut self, mask: &Array2D<T>, coord: Coordinate) {
+        self._set_mask(mask, coord, BitLogic::None)
+    }
+
+    /// Set a board to a specific mask over some range with AND logic.
+    /// # Arguments
+    /// - `board` - A muteable reference to an `Array2D` containing some generic
+    /// - `mask` - A second `Array2D` containing a generic of the same type to overwrite the board's values with
+    /// - `coord` - The starting coordinate [row, col] as a `Coordinate`
+    pub fn set_mask_and(&mut self, mask: &Array2D<T>, coord: Coordinate) {
+        self._set_mask(mask, coord, BitLogic::And)
+    }
+
+    /// Set a board to a specific mask over some range with OR logic.
+    /// # Arguments
+    /// - `board` - A muteable reference to an `Array2D` containing some generic
+    /// - `mask` - A second `Array2D` containing a generic of the same type to overwrite the board's values with
+    /// - `coord` - The starting coordinate [row, col] as a `Coordinate`
+    pub fn set_mask_or(&mut self, mask: &Array2D<T>, coord: Coordinate) {
+        self._set_mask(mask, coord, BitLogic::Or)
+    }
+
+    /// Set a board to a specific mask over some range with XOR logic.
+    /// # Arguments
+    /// - `board` - A muteable reference to an `Array2D` containing some generic
+    /// - `mask` - A second `Array2D` containing a generic of the same type to overwrite the board's values with
+    /// - `coord` - The starting coordinate [row, col] as a `Coordinate`
+    pub fn set_mask_xor(&mut self, mask: &Array2D<T>, coord: Coordinate) {
+        self._set_mask(mask, coord, BitLogic::Xor)
+    }
+
+    /// Backend for `.set_mask()`, `.set_mask_and()`, `.set_mask_or()` and `.set_mask_xor()` convenience methods.
+    fn _set_mask(&mut self, mask: &Array2D<T>, coord: Coordinate, logic: BitLogic) {
         // Checking if subslice is valid
+        // let origin = Coordinate::from_array([0, 0]);
         let mask_size = Coordinate::from_array([mask.num_rows(), mask.num_columns()]);
-        let board_size = Coordinate::from_array([self.board.num_rows(), self.board.num_columns()]);
-        let dest = coord + mask_size - [1, 1];
-        if dest.is_within_bounds(board_size) {
-            for r in 0..mask_size.row {
-                for c in 0..mask_size.col {
-                    let coord_board = coord + Coordinate::from_array([r, c]);
-                    self.board
-                        .set(coord_board.row, coord_board.col, *mask.get(r, c).unwrap())?;
+        // let board_size = Coordinate::from_array([self.get_shape().row, self.get_shape().col]);
+        // let dest = coord + mask_size - [1, 1];
+
+        for r in 0..mask_size.row {
+            for c in 0..mask_size.col {
+                let coord_board = coord + Coordinate::from_array([r, c]);
+                self.board
+                    .set(
+                        coord_board.row,
+                        coord_board.col,
+                        // Checking logic operation for setting.
+                        match logic {
+                            BitLogic::And => {
+                                *mask.get(r, c).unwrap()
+                                    & *self.board.get(coord_board.row, coord_board.col).unwrap()
+                            }
+                            BitLogic::Or => {
+                                *mask.get(r, c).unwrap()
+                                    | *self.board.get(coord_board.row, coord_board.col).unwrap()
+                            }
+                            BitLogic::Xor => {
+                                *mask.get(r, c).unwrap()
+                                    ^ *self.board.get(coord_board.row, coord_board.col).unwrap()
+                            }
+                            BitLogic::None => *mask.get(r, c).unwrap(),
+                        },
+                    )
+                    .unwrap();
+            }
+        }
+    }
+
+    /// Compute the logical AND of the current board state with another board state of similar dimensions.
+    /// # Arguments
+    /// - `array` - Another board state of similar dimensions
+    /// # Returns
+    /// - `Result<Array2D<T>, Error` - The AND of both board states or an `Error::DimensionMismatch`
+    pub fn and(&self, array: &Array2D<T>) -> Result<Board<T>, Error> {
+        self._bitlogic(array, BitLogic::And)
+    }
+
+    /// Compute the logical OR of the current board state with another board state of similar dimensions.
+    /// # Arguments
+    /// - `array` - Another board state of similar dimensions
+    /// # Returns
+    /// - `Result<Array2D<T>, Error` - The AND of both board states or an `Error::DimensionMismatch`
+    pub fn or(&self, array: &Array2D<T>) -> Result<Board<T>, Error> {
+        self._bitlogic(array, BitLogic::Or)
+    }
+
+    /// Compute the logical XOR of the current board state with another board state of similar dimensions.
+    /// # Arguments
+    /// - `array` - Another board state of similar dimensions
+    /// # Returns
+    /// - `Result<Array2D<T>, Error` - The XOR of both board states or an `Error::DimensionMismatch`
+    pub fn xor(&self, array: &Array2D<T>) -> Result<Board<T>, Error> {
+        self._bitlogic(array, BitLogic::Xor)
+    }
+
+    /// Backed for `.and()`, `.or()` and `.xor()` convenience methods.
+    fn _bitlogic(&self, array: &Array2D<T>, logic: BitLogic) -> Result<Board<T>, Error> {
+        // The array shapes do not match.
+        if !self._check_shape_match(array) {
+            return Err(Error::DimensionMismatch);
+        }
+        // Constructing column majors.
+        let own_column_major = self.get_array().as_column_major();
+        let other_column_major = array.as_column_major();
+        let mut logic_column_major = Vec::with_capacity(own_column_major.len());
+        match logic {
+            // Logical AND of own and other
+            BitLogic::And => {
+                for (own, other) in own_column_major.iter().zip(other_column_major.iter()) {
+                    logic_column_major.push(*own & *other);
                 }
             }
-            return Ok(());
-        };
-        Err(Error::IndicesOutOfBounds(dest.row, dest.col))
+            // Logical OR of own and other
+            BitLogic::Or => {
+                for (own, other) in own_column_major.iter().zip(other_column_major.iter()) {
+                    logic_column_major.push(*own | *other);
+                }
+            }
+            // Logical XOR of own and other
+            BitLogic::Xor => {
+                for (own, other) in own_column_major.iter().zip(other_column_major.iter()) {
+                    logic_column_major.push(*own ^ *other);
+                }
+            }
+            // Keep own
+            BitLogic::None => logic_column_major = own_column_major,
+        }
+
+        // Reconstructing the logical array from the column major.
+        let mut clone = Board::from_array(self.get_array(), self.get_negative());
+        clone.set_mask(
+            &Array2D::from_column_major(
+                &logic_column_major,
+                self.get_shape().row,
+                self.get_shape().col,
+            )
+            .unwrap(),
+            Coordinate::from_array([0, 0]),
+        );
+        Ok(clone)
+    }
+
+    /// Check if the internal board state matches the shape of an external array.
+    fn _check_shape_match(&self, array: &Array2D<T>) -> bool {
+        self.get_shape() == Coordinate::from_array([array.num_rows(), array.num_columns()])
     }
 }
-
-/// TODO: how to set tetromino:
-/// - bind tetromino array by top-left coordinate
-/// - get all columns of the tetromino array
-/// - set all columns of the array in column major order (set_column_major), row major would loop over to next row
-/// - monitor the height of the tetromino array. Halt it when at its own height above the lowest row
-/// - monitor the previous position of the tetromino and set it to false to avoid trues along the taken path
-/// - monitor logical and of tetromino and board array, if ever true: stop the tetromino
-/// - take logical XOR of previous and new board state. Only update TRUE pixels
 
 #[cfg(test)]
 mod tests {
@@ -112,9 +314,7 @@ mod tests {
             2,
         )
         .unwrap();
-        board
-            .set_mask(&mask, Coordinate::from_array([1, 2]))
-            .expect("Coordinates where within bounds");
+        board.set_mask(&mask, Coordinate::from_array([1, 2]));
         let target = Array2D::from_row_major(
             &[
                 false, false, false, false, //
@@ -129,6 +329,7 @@ mod tests {
     }
 
     #[test]
+    #[should_panic]
     fn test_set_mask_error() {
         // Create board:
         //   0 1 2 3 4
@@ -149,9 +350,7 @@ mod tests {
             3,
         )
         .unwrap();
-        assert!(board
-            .set_mask(&mask, Coordinate::from_array([3, 0]))
-            .is_err())
+        board.set_mask(&mask, Coordinate::from_array([3, 0]))
     }
 
     #[test]
@@ -174,13 +373,11 @@ mod tests {
         // 2 f t t
         // 3 f f f
         let mut board = Board::new(Coordinate::from_array([4, 3]), false);
-        board
-            .set_value(
-                true,
-                Coordinate::from_array([0, 1]),
-                Coordinate::from_array([3, 1]),
-            )
-            .expect("Coordinates where within bounds");
+        board.set_value(
+            true,
+            Coordinate::from_array([0, 1]),
+            Coordinate::from_array([3, 1]),
+        );
         let target = Array2D::from_row_major(
             &[
                 false, true, false, //
@@ -196,6 +393,7 @@ mod tests {
     }
 
     #[test]
+    #[should_panic]
     fn test_set_value_error() {
         // Create board with coordinate X:
         //   0 1
@@ -208,12 +406,10 @@ mod tests {
         //   0 1 2
         // 0 t t t
         let mut board = Board::new(Coordinate::from_array([5, 2]), false);
-        assert!(board
-            .set_value(
-                true,
-                Coordinate::from_array([0, 0]),
-                Coordinate::from_array([1, 3])
-            )
-            .is_err())
+        board.set_value(
+            true,
+            Coordinate::from_array([0, 0]),
+            Coordinate::from_array([1, 3]),
+        )
     }
 }
