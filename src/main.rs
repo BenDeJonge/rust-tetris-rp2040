@@ -1,9 +1,13 @@
-mod board;
-mod color;
-mod coordinate;
-mod gravity;
-mod rotation;
-mod tetrominoes;
+//! A binary crate running a tetris clone on a RP2040 microcontroller
+
+#![warn(missing_docs)]
+
+pub mod board;
+pub mod color;
+pub mod coordinate;
+pub mod gravity;
+pub mod rotation;
+pub mod tetrominoes;
 
 use board::Board;
 use coordinate::Coordinate;

@@ -1,15 +1,17 @@
+//! A module to rotate matrices by 90 degrees.
+
 use array2d::Array2D;
 use std::clone::Clone;
 
 /// Transpose a matrix by turning rows into columns or vise versa.
 /// # Arguments
-/// - `matrix` - A reference to an Array2D of a generic which can be cloned
+/// - `matrix` - A reference to an `Array2D` of a generic which can be cloned
 fn transpose<T: Clone>(matrix: &Array2D<T>) -> Array2D<T> {
     Array2D::from_columns(&matrix.as_rows()).unwrap()
 }
 /// Rotate a matrix 90 degrees clockwise by transposing and reversing the column order.
 /// # Arguments
-/// - `matrix` - A reference to an Array2D of a generic which can be cloned
+/// - `matrix` - A reference to an `Array2D` of a generic which can be cloned
 pub fn rotate_cw<T: Clone>(matrix: &Array2D<T>) -> Array2D<T> {
     let columns: Vec<Vec<T>> = transpose(matrix).as_columns().into_iter().rev().collect();
     Array2D::from_columns(&columns).unwrap()
@@ -17,7 +19,7 @@ pub fn rotate_cw<T: Clone>(matrix: &Array2D<T>) -> Array2D<T> {
 
 /// Rotate a matrix 90 degrees counterclockwise by transposing and reversing the row order.
 /// # Arguments
-/// - `matrix` - A reference to an Array2D of a generic which can be cloned
+/// - `matrix` - A reference to an `Array2D` of a generic which can be cloned
 pub fn rotate_ccw<T: Clone>(matrix: &Array2D<T>) -> Array2D<T> {
     let rows: Vec<Vec<T>> = transpose(matrix).as_rows().into_iter().rev().collect();
     Array2D::from_rows(&rows).unwrap()

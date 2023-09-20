@@ -1,32 +1,47 @@
+//! A module containing a `Tetromino` struct, modelling a tetromino piece.
+
 #![allow(dead_code)]
 
-use crate::color::{Color, ColorRgb};
+use crate::color::{Name, Rgb};
 use crate::coordinate::Coordinate;
 use crate::rotation::generate_matrices;
 use array2d::Array2D;
 
 // TODO: how to save a list of TetrominoShapes, each with color and array. Generate e.g. Vec<Tetromino>
 
+/// An enum of available tetrominoshapes
 pub enum TetrominoShape {
+    /// x x x x
     I,
+    /// x . .
+    /// x x x
     J,
+    /// . . x
+    /// x x x
     L,
+    /// x x
+    /// x x
     O,
+    /// . x x
+    /// x x .
     S,
+    /// . x .
+    /// x x x
     T,
+    /// x x .
+    /// . x x
     Z,
 }
 
+/// A struct reflecting a Tetromino block.
 pub struct Tetromino<T> {
-    /// A struct reflecting a Tetromino block.
-    /// # Attributes
     /// - `shape` - A public `TetrominoShape` enum variant representing the shape
-    /// - `color` - A public `ColorRgb` struct representing the LED color
-    /// - `masks` - An array of binary masks for the 4 rotation states
-    /// - `index` - The index of the currently used mask
     pub shape: TetrominoShape,
-    pub color: ColorRgb,
+    /// - `color` - A public `ColorRgb` struct representing the LED color
+    pub color: Rgb,
+    /// - `masks` - An array of binary masks for the 4 rotation states
     masks: [Array2D<T>; 4],
+    /// - `index` - The index of the currently used mask
     index: usize,
 }
 
@@ -41,7 +56,7 @@ where
     /// - `mask` - An initial mask as an `Array2D<T>`, to be rotated three times
     /// # Returns
     /// - `Tetromino` - An instance of a Tetromino struct
-    pub fn new(shape: TetrominoShape, color: ColorRgb, mask: Array2D<T>) -> Self {
+    pub fn new(shape: TetrominoShape, color: Rgb, mask: Array2D<T>) -> Self {
         Tetromino {
             shape,
             color,
@@ -86,123 +101,102 @@ impl From<TetrominoShape> for Tetromino<bool> {
     /// Convert from a `TetrominoShape` to a `Tetromino`.
     fn from(shape: TetrominoShape) -> Self {
         match shape {
-            TetrominoShape::I => Tetromino {
-                shape: TetrominoShape::I,
-                color: ColorRgb::from(Color::Cyan),
-                index: 0,
-                masks: generate_matrices(
-                    Array2D::from_row_major(
-                        &[
-                            true, true, true, true, // o o o o
-                        ],
-                        1,
-                        4,
-                    )
-                    .unwrap(),
-                ),
-            },
+            s @ TetrominoShape::I => Tetromino::new(
+                s,
+                Rgb::from(Name::Cyan),
+                Array2D::from_row_major(
+                    &[
+                        true, true, true, true, // o o o o
+                    ],
+                    1,
+                    4,
+                )
+                .unwrap(),
+            ),
 
-            TetrominoShape::J => Tetromino {
-                shape: TetrominoShape::J,
-                color: ColorRgb::from(Color::Blue),
-                index: 0,
-                masks: generate_matrices(
-                    Array2D::from_row_major(
-                        &[
-                            true, false, false, //  o . .
-                            true, true, true, //    o o o
-                        ],
-                        2,
-                        3,
-                    )
-                    .unwrap(),
-                ),
-            },
+            s @ TetrominoShape::J => Tetromino::new(
+                s,
+                Rgb::from(Name::Blue),
+                Array2D::from_row_major(
+                    &[
+                        true, false, false, //  o . .
+                        true, true, true, //    o o o
+                    ],
+                    2,
+                    3,
+                )
+                .unwrap(),
+            ),
 
-            TetrominoShape::L => Tetromino {
-                shape: TetrominoShape::L,
-                color: ColorRgb::from(Color::Orange),
-                index: 0,
-                masks: generate_matrices(
-                    Array2D::from_row_major(
-                        &[
-                            false, false, true, //  . . o
-                            true, true, true, //    o o o
-                        ],
-                        2,
-                        3,
-                    )
-                    .unwrap(),
-                ),
-            },
+            s @ TetrominoShape::L => Tetromino::new(
+                s,
+                Rgb::from(Name::Orange),
+                Array2D::from_row_major(
+                    &[
+                        false, false, true, //  . . o
+                        true, true, true, //    o o o
+                    ],
+                    2,
+                    3,
+                )
+                .unwrap(),
+            ),
 
-            TetrominoShape::O => Tetromino {
-                shape: TetrominoShape::O,
-                color: ColorRgb::from(Color::Yellow),
-                index: 0,
-                masks: generate_matrices(
-                    Array2D::from_row_major(
-                        &[
-                            true, true, // o o
-                            true, true, // o o
-                        ],
-                        2,
-                        2,
-                    )
-                    .unwrap(),
-                ),
-            },
+            s @ TetrominoShape::O => Tetromino::new(
+                s,
+                Rgb::from(Name::Yellow),
+                Array2D::from_row_major(
+                    &[
+                        true, true, // o o
+                        true, true, // o o
+                    ],
+                    2,
+                    2,
+                )
+                .unwrap(),
+            ),
 
-            TetrominoShape::S => Tetromino {
-                shape: TetrominoShape::S,
-                color: ColorRgb::from(Color::Green),
-                index: 0,
-                masks: generate_matrices(
-                    Array2D::from_row_major(
-                        &[
-                            false, true, true, // . x x
-                            true, true, false, // x x .
-                        ],
-                        2,
-                        3,
-                    )
-                    .unwrap(),
-                ),
-            },
+            s @ TetrominoShape::S => Tetromino::new(
+                s,
+                Rgb::from(Name::Green),
+                Array2D::from_row_major(
+                    &[
+                        false, true, true, // . x x
+                        true, true, false, // x x .
+                    ],
+                    2,
+                    3,
+                )
+                .unwrap(),
+            ),
 
-            TetrominoShape::T => Tetromino {
-                shape: TetrominoShape::T,
-                color: ColorRgb::from(Color::Purple),
-                index: 0,
-                masks: generate_matrices(
-                    Array2D::from_row_major(
-                        &[
-                            false, true, false, //  . x .
-                            true, true, true, //    x x x
-                        ],
-                        2,
-                        3,
-                    )
-                    .unwrap(),
-                ),
-            },
+            s @ TetrominoShape::T => Tetromino::new(
+                s,
+                Rgb::from(Name::Purple),
+                Array2D::from_row_major(
+                    &[
+                        false, true, false, //  . x .
+                        true, true, true, //    x x x
+                    ],
+                    2,
+                    3,
+                )
+                .unwrap(),
+            ),
 
-            TetrominoShape::Z => Tetromino {
-                shape: TetrominoShape::Z,
-                color: ColorRgb::from(Color::Red),
-                index: 0,
-                masks: generate_matrices(
-                    Array2D::from_row_major(
-                        &[
-                            true, true, false, //   x x .
-                            false, true, true, //   . x x
-                        ],
-                        2,
-                        3,
-                    )
-                    .unwrap(),
-                ),
-            },
+            s @ TetrominoShape::Z => Tetromino::new(
+                s,
+                Rgb::from(Name::Purple),
+                Array2D::from_row_major(
+                    &[
+                        true, true, false, //   x x .
+                        false, true, true, //   . x x
+                    ],
+                    2,
+                    3,
+                )
+                .unwrap(),
+            ),
         }
     }
 }

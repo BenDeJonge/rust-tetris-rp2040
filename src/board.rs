@@ -1,18 +1,28 @@
+//! A module containing a `Board<T>` struct, modelling the current board state of the game
+
 #![allow(dead_code)]
 
 use crate::coordinate::Coordinate;
 use array2d::{Array2D, Error};
 use std::cmp::{max, min};
 
+/// A struct modelling a current board of placed tetrominos
 pub struct Board<T: Copy> {
+    /// The current board state
     board: Array2D<T>,
+    /// The value representing an empty cell
     negative: T,
 }
 
+/// A struct modelling the possible logical bitwise operations
 pub enum BitLogic {
+    /// The bitwise AND operation
     And,
+    /// The bitwise OR operation
     Or,
+    /// The bitwise XOR operation
     Xor,
+    /// No bitwise operation
     None,
 }
 
@@ -44,7 +54,7 @@ where
     /// - `Board<T>` - A board instance
     pub fn from_array(array: &Array2D<T>, negative: T) -> Self {
         Board {
-            board: array.to_owned(),
+            board: array.clone(),
             negative,
         }
     }
@@ -97,23 +107,22 @@ where
         };
 
         let origin = Coordinate::from_array([0, 0]);
-        match coord_low.is_within_bounds(origin, self.get_shape())
+        if coord_low.is_within_bounds(origin, self.get_shape())
             && coord_high.is_within_bounds(origin, self.get_shape())
         {
-            false => None,
-            true => {
-                let dest = coord_high - coord_low;
-                let mut row_major = Vec::with_capacity(dest.inner_product());
-                for r in coord_low.row..coord_high.row {
-                    for c in coord_low.col..coord_high.col {
-                        row_major.push(*self.get_array().get(r, c).unwrap())
-                    }
+            let dest = coord_high - coord_low;
+            let mut row_major = Vec::with_capacity(dest.inner_product());
+            for r in coord_low.row..coord_high.row {
+                for c in coord_low.col..coord_high.col {
+                    row_major.push(*self.get_array().get(r, c).unwrap());
                 }
-                Some(Board::from_array(
-                    &Array2D::from_row_major(&row_major, dest.row, dest.col).unwrap(),
-                    self.get_negative(),
-                ))
             }
+            Some(Board::from_array(
+                &Array2D::from_row_major(&row_major, dest.row, dest.col).unwrap(),
+                self.get_negative(),
+            ))
+        } else {
+            None
         }
     }
 
@@ -126,7 +135,7 @@ where
     pub fn set_value(&mut self, value: T, coord: Coordinate, dims: Coordinate) {
         // Simple wrapper for set_mask.
         let mask = Array2D::filled_with(value, dims.row, dims.col);
-        self.set_mask(&mask, coord)
+        self.set_mask(&mask, coord);
     }
 
     /// Set a board to a specific mask over some range without logic.
@@ -135,7 +144,7 @@ where
     /// - `mask` - A second `Array2D` containing a generic of the same type to overwrite the board's values with
     /// - `coord` - The starting coordinate [row, col] as a `Coordinate`
     pub fn set_mask(&mut self, mask: &Array2D<T>, coord: Coordinate) {
-        self._set_mask(mask, coord, BitLogic::None)
+        self._set_mask(mask, coord, &BitLogic::None);
     }
 
     /// Set a board to a specific mask over some range with AND logic.
@@ -144,7 +153,7 @@ where
     /// - `mask` - A second `Array2D` containing a generic of the same type to overwrite the board's values with
     /// - `coord` - The starting coordinate [row, col] as a `Coordinate`
     pub fn set_mask_and(&mut self, mask: &Array2D<T>, coord: Coordinate) {
-        self._set_mask(mask, coord, BitLogic::And)
+        self._set_mask(mask, coord, &BitLogic::And);
     }
 
     /// Set a board to a specific mask over some range with OR logic.
@@ -153,7 +162,7 @@ where
     /// - `mask` - A second `Array2D` containing a generic of the same type to overwrite the board's values with
     /// - `coord` - The starting coordinate [row, col] as a `Coordinate`
     pub fn set_mask_or(&mut self, mask: &Array2D<T>, coord: Coordinate) {
-        self._set_mask(mask, coord, BitLogic::Or)
+        self._set_mask(mask, coord, &BitLogic::Or);
     }
 
     /// Set a board to a specific mask over some range with XOR logic.
@@ -162,11 +171,11 @@ where
     /// - `mask` - A second `Array2D` containing a generic of the same type to overwrite the board's values with
     /// - `coord` - The starting coordinate [row, col] as a `Coordinate`
     pub fn set_mask_xor(&mut self, mask: &Array2D<T>, coord: Coordinate) {
-        self._set_mask(mask, coord, BitLogic::Xor)
+        self._set_mask(mask, coord, &BitLogic::Xor);
     }
 
     /// Backend for `.set_mask()`, `.set_mask_and()`, `.set_mask_or()` and `.set_mask_xor()` convenience methods.
-    fn _set_mask(&mut self, mask: &Array2D<T>, coord: Coordinate, logic: BitLogic) {
+    fn _set_mask(&mut self, mask: &Array2D<T>, coord: Coordinate, logic: &BitLogic) {
         // Checking if subslice is valid
         // let origin = Coordinate::from_array([0, 0]);
         let mask_size = Coordinate::from_array([mask.num_rows(), mask.num_columns()]);
@@ -208,7 +217,7 @@ where
     /// # Returns
     /// - `Result<Array2D<T>, Error` - The AND of both board states or an `Error::DimensionMismatch`
     pub fn and(&self, array: &Array2D<T>) -> Result<Board<T>, Error> {
-        self._bitlogic(array, BitLogic::And)
+        self._bitlogic(array, &BitLogic::And)
     }
 
     /// Compute the logical OR of the current board state with another board state of similar dimensions.
@@ -217,7 +226,7 @@ where
     /// # Returns
     /// - `Result<Array2D<T>, Error` - The AND of both board states or an `Error::DimensionMismatch`
     pub fn or(&self, array: &Array2D<T>) -> Result<Board<T>, Error> {
-        self._bitlogic(array, BitLogic::Or)
+        self._bitlogic(array, &BitLogic::Or)
     }
 
     /// Compute the logical XOR of the current board state with another board state of similar dimensions.
@@ -226,11 +235,11 @@ where
     /// # Returns
     /// - `Result<Array2D<T>, Error` - The XOR of both board states or an `Error::DimensionMismatch`
     pub fn xor(&self, array: &Array2D<T>) -> Result<Board<T>, Error> {
-        self._bitlogic(array, BitLogic::Xor)
+        self._bitlogic(array, &BitLogic::Xor)
     }
 
     /// Backed for `.and()`, `.or()` and `.xor()` convenience methods.
-    fn _bitlogic(&self, array: &Array2D<T>, logic: BitLogic) -> Result<Board<T>, Error> {
+    fn _bitlogic(&self, array: &Array2D<T>, logic: &BitLogic) -> Result<Board<T>, Error> {
         // The array shapes do not match.
         if !self._check_shape_match(array) {
             return Err(Error::DimensionMismatch);

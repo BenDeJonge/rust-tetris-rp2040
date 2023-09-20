@@ -1,10 +1,15 @@
+//! A module containig a `Coordinate` struct, modelling an (x,y) position
+
 #![allow(dead_code)]
+
 use std::ops;
 
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+/// A basic struct modelling a coordinate as row and a column
 pub struct Coordinate {
-    /// A basic struct modelling a coordinate as row and a column
+    /// The coordinate row (vertical, y)
     pub row: usize,
+    /// The coordinate column (horizontal, x)
     pub col: usize,
 }
 
@@ -21,6 +26,7 @@ impl Coordinate {
         }
     }
 
+    /// Compute the inner product of the coordinate as row x column
     pub fn inner_product(&self) -> usize {
         self.row * self.col
     }
@@ -32,12 +38,13 @@ impl Coordinate {
     /// # Returns
     /// - `Coordinate` - The `Coordinate` as a [row, col] index
     pub fn from_row_major(index: usize, dims: Coordinate) -> Option<Self> {
-        match index <= dims.inner_product() {
-            true => Some(Coordinate {
+        if index <= dims.inner_product() {
+            Some(Coordinate {
                 row: index / dims.col,
                 col: index % dims.col,
-            }),
-            false => None,
+            })
+        } else {
+            None
         }
     }
 
@@ -48,12 +55,13 @@ impl Coordinate {
     /// # Returns
     /// - `Coordinate` - The `Coordinate` as a [row, col] index
     pub fn from_column_major(index: usize, dims: Coordinate) -> Option<Self> {
-        match index <= dims.inner_product() {
-            true => Some(Coordinate {
+        if index <= dims.inner_product() {
+            Some(Coordinate {
                 row: index % dims.row,
                 col: index / dims.row,
-            }),
-            false => None,
+            })
+        } else {
+            None
         }
     }
 
