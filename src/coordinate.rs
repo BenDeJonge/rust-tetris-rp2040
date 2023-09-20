@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 use std::ops;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct Coordinate {
     /// A basic struct modelling a coordinate as row and a column
     pub row: usize,
@@ -59,12 +59,15 @@ impl Coordinate {
 
     /// Check if the coordinate is within some boundary
     /// # Arguments
-    /// - `coord` - The coordinate to evaluation
-    /// - `bounds` - The boundary the coordinate should not cross
+    /// - `lower` - The lower boundary the coordiante should not cross
+    /// - `upper` - The higher boundary the coordinate should not cross
     /// # Returns
     /// - `bool` - Whether (`true`) or not (`false`) the coordinate is within the boundary
-    pub fn is_within_bounds(&self, bounds: Coordinate) -> bool {
-        (self.row <= bounds.row) && (self.col <= bounds.col)
+    pub fn is_within_bounds(&self, lower: Coordinate, upper: Coordinate) -> bool {
+        lower.row <= self.row
+            && self.row <= upper.row
+            && lower.col <= self.col
+            && self.col <= upper.col
     }
 }
 
