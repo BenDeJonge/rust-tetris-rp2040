@@ -1,4 +1,7 @@
+//! A module containing utility functions to check how a falling tetromino should interact with a slice of the board.
+
 #![allow(dead_code)]
+
 use std::iter::Iterator;
 
 use crate::board::Board;
